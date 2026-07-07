@@ -1,0 +1,17 @@
+# Python
+backend/venv/
+venv/
+__pycache__/
+*.pyc
+
+# Dataset (optional, don't upload large datasets)
+backend/dataset/
+
+# Uploads
+backend/app/uploads/
+
+# Node
+frontend/node_modules/
+
+# Environment
+.env
