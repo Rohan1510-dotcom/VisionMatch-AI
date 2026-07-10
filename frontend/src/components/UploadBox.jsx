@@ -1,128 +1,174 @@
 import { useState } from "react";
-import { uploadImage } from "../services/api";
 
 function UploadBox() {
-  // State variables
-  const [selectedImage, setSelectedImage] = useState(null);
-  const [selectedFile, setSelectedFile] = useState(null);
-  const [selectedFileName, setSelectedFileName] = useState("");
-  const [selectedFileSize, setSelectedFileSize] = useState("");
 
-  // Process selected file
-  function processFile(file) {
-    if (!file) return;
+    const [selectedFile, setSelectedFile] = useState(null);
+    const [selectedImage, setSelectedImage] = useState(null);
+    const [results, setResults] = useState([]);
+    const [loading, setLoading] = useState(false);
 
-    const imageUrl = URL.createObjectURL(file);
+    function handleImage(event) {
 
-    setSelectedImage(imageUrl);
-    setSelectedFile(file);
-    setSelectedFileName(file.name);
-    setSelectedFileSize((file.size / 1024).toFixed(2));
-  }
+        const file = event.target.files[0];
 
-  // File picker
-  function handleImage(event) {
-    processFile(event.target.files[0]);
-  }
+        if (file) {
 
-  // Drag over
-  function handleDragOver(event) {
-    event.preventDefault();
-  }
+            setSelectedFile(file);
+            setSelectedImage(URL.createObjectURL(file));
+            setResults([]);
 
-  // Drop image
-  function handleDrop(event) {
-    event.preventDefault();
+        }
 
-    processFile(event.dataTransfer.files[0]);
-  }
-
-  // Remove image
-  function removeImage() {
-    setSelectedImage(null);
-    setSelectedFile(null);
-    setSelectedFileName("");
-    setSelectedFileSize("");
-  }
-
-  // Upload image to FastAPI
-  async function handleSearch() {
-    if (!selectedFile) {
-      alert("Please select an image first.");
-      return;
     }
 
-    try {
-      const result = await uploadImage(selectedFile);
+    async function searchProducts() {
 
-      console.log(result);
+        if (!selectedFile) {
 
-      alert(result.message);
-    } catch (error) {
-      console.error(error);
+            alert("Please select an image first.");
+            return;
 
-      alert("Upload failed!");
+        }
+
+        setLoading(true);
+
+        const formData = new FormData();
+
+        formData.append("file", selectedFile);
+
+        try {
+
+            const response = await fetch(
+                "http://127.0.0.1:8000/search",
+                {
+                    method: "POST",
+                    body: formData,
+                }
+            );
+
+            const data = await response.json();
+
+            setResults(data.results);
+
+        }
+
+        catch (error) {
+
+            console.error(error);
+
+            alert("Search Failed!");
+
+        }
+
+        setLoading(false);
+
     }
-  }
 
-  return (
-    <div className="upload-box">
-      {/* Upload Area */}
-      <div
-        className="upload-area"
-        onDragOver={handleDragOver}
-        onDrop={handleDrop}
-      >
-        <h2>📷</h2>
+    return (
 
-        <h3>Drag & Drop Image Here</h3>
+        <div className="upload-box">
 
-        <p>or click below to choose an image</p>
+            <h3>📷 Drag & Drop Image Here</h3>
 
-        <input
-          type="file"
-          accept="image/*"
-          onChange={handleImage}
-        />
+            <p>or choose an image from your computer</p>
 
-        <small>Supported Formats: JPG • PNG • JPEG</small>
-      </div>
+            <input
+                type="file"
+                accept="image/*"
+                onChange={handleImage}
+            />
 
-      {/* Preview Card */}
-      {selectedImage && (
-        <div className="preview-card">
-          <h3>🖼 Image Preview</h3>
+            {
 
-          <img
-            src={selectedImage}
-            alt="Preview"
-            className="preview-image"
-          />
+                selectedImage &&
 
-          <p className="file-name">
-            📄 {selectedFileName}
-          </p>
+                <img
+                    src={selectedImage}
+                    alt="Preview"
+                    className="preview-image"
+                />
 
-          <p className="file-size">
-            📦 {selectedFileSize} KB
-          </p>
+            }
 
-          <div className="button-group">
+            <br />
+
             <button
-              className="remove-btn"
-              onClick={removeImage}
+                onClick={searchProducts}
             >
-              Remove
+
+                Search Similar Products
+
             </button>
 
-            <button onClick={handleSearch}>
-              Search Similar Products
-            </button>
-          </div>
+            {
+
+                loading &&
+
+                <h3>Searching...</h3>
+
+            }
+
+            {
+
+                results.length > 0 &&
+
+                <div className="results">
+
+                    <h2>Similar Products</h2>
+
+                    {
+
+                        results.map((product, index) => (
+
+                            <div
+                                key={index}
+                                className="product-card"
+                            >
+
+                                <h3>{product.product_name}</h3>
+
+                                <p>
+                                    <b>Gender:</b> {product.gender}
+                                </p>
+
+                                <p>
+                                    <b>Category:</b> {product.master_category}
+                                </p>
+
+                                <p>
+                                    <b>Type:</b> {product.article_type}
+                                </p>
+
+                                <p>
+                                    <b>Color:</b> {product.color}
+                                </p>
+
+                                <p>
+                                    <b>Season:</b> {product.season}
+                                </p>
+
+                                <p>
+                                    <b>Usage:</b> {product.usage}
+                                </p>
+
+                                <p>
+                                    <b>Similarity:</b> {product.similarity}%
+                                </p>
+
+                            </div>
+
+                        ))
+
+                    }
+
+                </div>
+
+            }
+
         </div>
-      )}
-    </div>
-  );
+
+    );
+
 }
 
 export default UploadBox;

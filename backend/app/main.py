@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.routers import upload
+from app.routers import search
 
 app = FastAPI(
     title="VisionMatch AI API",
@@ -18,7 +19,7 @@ app.add_middleware(
 )
 
 app.include_router(upload.router)
-
+app.include_router(search.router)
 
 @app.get("/")
 def root():
