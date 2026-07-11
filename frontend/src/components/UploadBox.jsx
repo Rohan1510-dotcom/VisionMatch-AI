@@ -1,23 +1,27 @@
 import { useState } from "react";
+import ProductCard from "./ProductCard";
 
 function UploadBox() {
 
     const [selectedFile, setSelectedFile] = useState(null);
-    const [selectedImage, setSelectedImage] = useState(null);
+
+    const [previewImage, setPreviewImage] = useState(null);
+
     const [results, setResults] = useState([]);
+
     const [loading, setLoading] = useState(false);
 
     function handleImage(event) {
 
         const file = event.target.files[0];
 
-        if (file) {
+        if (!file) return;
 
-            setSelectedFile(file);
-            setSelectedImage(URL.createObjectURL(file));
-            setResults([]);
+        setSelectedFile(file);
 
-        }
+        setPreviewImage(URL.createObjectURL(file));
+
+        setResults([]);
 
     }
 
@@ -26,6 +30,7 @@ function UploadBox() {
         if (!selectedFile) {
 
             alert("Please select an image first.");
+
             return;
 
         }
@@ -46,6 +51,12 @@ function UploadBox() {
                 }
             );
 
+            if (!response.ok) {
+
+                throw new Error("Search request failed.");
+
+            }
+
             const data = await response.json();
 
             setResults(data.results);
@@ -56,55 +67,88 @@ function UploadBox() {
 
             console.error(error);
 
-            alert("Search Failed!");
+            alert("Unable to search products.");
 
         }
 
-        setLoading(false);
+        finally {
+
+            setLoading(false);
+
+        }
 
     }
 
     return (
 
-        <div className="upload-box">
+        <div className="upload-container">
 
-            <h3>📷 Drag & Drop Image Here</h3>
+            <div className="upload-card">
 
-            <p>or choose an image from your computer</p>
+                <h2>Upload Product Image</h2>
 
-            <input
-                type="file"
-                accept="image/*"
-                onChange={handleImage}
-            />
+                <p>
 
-            {
+                    Choose an image of a fashion product and let AI find similar
+                    items from the catalogue.
 
-                selectedImage &&
+                </p>
 
-                <img
-                    src={selectedImage}
-                    alt="Preview"
-                    className="preview-image"
+                <input
+
+                    type="file"
+
+                    accept="image/*"
+
+                    onChange={handleImage}
+
                 />
 
-            }
+                {
 
-            <br />
+                    previewImage &&
 
-            <button
-                onClick={searchProducts}
-            >
+                    <div className="preview-container">
 
-                Search Similar Products
+                        <img
 
-            </button>
+                            src={previewImage}
+
+                            alt="Preview"
+
+                            className="preview-image"
+
+                        />
+
+                    </div>
+
+                }
+
+                <button
+
+                    className="search-btn"
+
+                    onClick={searchProducts}
+
+                >
+
+                    Search Similar Products
+
+                </button>
+
+            </div>
 
             {
 
                 loading &&
 
-                <h3>Searching...</h3>
+                <div className="loading">
+
+                    <h2>🔍 Searching through 44,000+ products...</h2>
+
+                    
+
+                </div>
 
             }
 
@@ -112,56 +156,35 @@ function UploadBox() {
 
                 results.length > 0 &&
 
-                <div className="results">
+                <>
 
-                    <h2>Similar Products</h2>
+                    <h2 className="results-title">
 
-                    {
+                        Top Similar Products
 
-                        results.map((product, index) => (
+                    </h2>
 
-                            <div
-                                key={index}
-                                className="product-card"
-                            >
+                    <div className="results-grid">
 
-                                <h3>{product.product_name}</h3>
+                        {
 
-                                <p>
-                                    <b>Gender:</b> {product.gender}
-                                </p>
+                            results.map((product, index) => (
 
-                                <p>
-                                    <b>Category:</b> {product.master_category}
-                                </p>
+                                <ProductCard
 
-                                <p>
-                                    <b>Type:</b> {product.article_type}
-                                </p>
+                                    key={index}
 
-                                <p>
-                                    <b>Color:</b> {product.color}
-                                </p>
+                                    product={product}
 
-                                <p>
-                                    <b>Season:</b> {product.season}
-                                </p>
+                                />
 
-                                <p>
-                                    <b>Usage:</b> {product.usage}
-                                </p>
+                            ))
 
-                                <p>
-                                    <b>Similarity:</b> {product.similarity}%
-                                </p>
+                        }
 
-                            </div>
+                    </div>
 
-                        ))
-
-                    }
-
-                </div>
+                </>
 
             }
 

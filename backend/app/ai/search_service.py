@@ -49,7 +49,7 @@ def search_similar(image_path, top_k=5):
         if metadata is None:
             continue
 
-        metadata["image"] = image_name
+        metadata["image_url"] = f"http://127.0.0.1:8000/images/{image_name}"
 
         metadata["similarity"] = round(float(score) * 100, 2)
 
